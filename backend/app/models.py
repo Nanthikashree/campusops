@@ -19,7 +19,9 @@ ROLES = [
 ]
 
 TICKET_STATUSES = ["new", "triaged", "assigned", "in_progress", "blocked", "resolved", "closed"]
-
+ISSUE_TYPES = ["maintenance", "it_network", "room_booking", "equipment", "inventory", "other"]
+PRIORITIES = ["low", "medium", "high", "critical"]
+CHANNELS = ["form", "chat", "email"]
 
 class User(Base):
     __tablename__ = "users"
@@ -57,10 +59,12 @@ class Ticket(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     room_id: Mapped[int | None] = mapped_column(ForeignKey("rooms.id"), nullable=True)
     reporter_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    issue_type: Mapped[str] = mapped_column(String(30), default="other")
+    asset: Mapped[str] = mapped_column(String(100), default="")
+    channel: Mapped[str] = mapped_column(String(20), default="form")
     status: Mapped[str] = mapped_column(String(20), default="new")
     priority: Mapped[str] = mapped_column(String(20), default="medium")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
-
 
 class JobEvent(Base):
     """The digital job card: an append-only log. Rows are added, never edited."""
