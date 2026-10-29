@@ -8,6 +8,7 @@ from .database import Base, engine
 from .routes_auth import router as auth_router
 from .routes_tickets import router as tickets_router
 from .routes_assign import router as assign_router
+from .routes_bookings import router as bookings_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,6 +24,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(tickets_router)
 app.include_router(assign_router)
+app.include_router(bookings_router) 
 
 @app.get("/api/health")
 def health():

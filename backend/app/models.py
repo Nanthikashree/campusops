@@ -22,6 +22,7 @@ TICKET_STATUSES = ["new", "triaged", "assigned", "in_progress", "blocked", "reso
 ISSUE_TYPES = ["maintenance", "it_network", "room_booking", "equipment", "inventory", "other"]
 PRIORITIES = ["low", "medium", "high", "critical"]
 CHANNELS = ["form", "chat", "email"]
+BOOKING_KINDS = ["class", "exam", "event", "meeting"]
 
 class User(Base):
     __tablename__ = "users"
@@ -94,4 +95,17 @@ class Assignment(Base):
     assigned_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     reason: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+class Booking(Base):
+    __tablename__ = "bookings"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id"))
+    title: Mapped[str] = mapped_column(String(200))
+    kind: Mapped[str] = mapped_column(String(20), default="class")  # class, exam, event, meeting
+    start_time: Mapped[datetime] = mapped_column(DateTime)
+    end_time: Mapped[datetime] = mapped_column(DateTime)
+    attendees: Mapped[int] = mapped_column(Integer, default=0)
+    booked_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    status: Mapped[str] = mapped_column(String(20), default="active")  # active, cancelled
+    note: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
