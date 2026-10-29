@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .assignment import assignee_name
 from .database import get_db
 from .deps import get_current_user
 from .events import add_event, verify_chain
@@ -33,6 +34,7 @@ def ticket_out(db: Session, t: Ticket) -> dict:
         "priority": t.priority, "issue_type": t.issue_type, "asset": t.asset, "channel": t.channel,
         "room": f"{room.building.name} - {room.name}" if room else None,
         "reporter": reporter.name if reporter else None,
+        "assignee": assignee_name(db, t.id),
         "created_at": t.created_at.isoformat() if t.created_at else None,
     }
 

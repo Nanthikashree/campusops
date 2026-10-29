@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, Integer, ForeignKey, Text, DateTime
+from sqlalchemy import String, Integer, ForeignKey, Text, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 
@@ -78,3 +78,20 @@ class JobEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     prev_hash: Mapped[str] = mapped_column(String(64), default="")
     hash: Mapped[str] = mapped_column(String(64), default="")
+class StaffProfile(Base):
+    __tablename__ = "staff_profiles"
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    skills: Mapped[str] = mapped_column(String(200), default="")  # e.g. "electrical,hvac"
+    status: Mapped[str] = mapped_column(String(20), default="available")  # available, on_leave
+    max_jobs: Mapped[int] = mapped_column(Integer, default=4)
+
+
+class Assignment(Base):
+    __tablename__ = "assignments"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id"))
+    technician_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    assigned_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
