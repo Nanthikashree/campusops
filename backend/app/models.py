@@ -142,3 +142,35 @@ class Approval(Base):
     decided_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     note: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+class Notification(Base):
+    __tablename__ = "notifications"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    ticket_id: Mapped[int | None] = mapped_column(ForeignKey("tickets.id"), nullable=True)
+    kind: Mapped[str] = mapped_column(String(30), default="info")
+    message: Mapped[str] = mapped_column(Text, default="")
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+class EmailMessage(Base):
+    __tablename__ = "email_messages"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    message_id: Mapped[str] = mapped_column(String(200), unique=True)
+    sender: Mapped[str] = mapped_column(String(150))
+    subject: Mapped[str] = mapped_column(String(200), default="")
+    body: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), default="received")  # processed, invalid
+    ticket_id: Mapped[int | None] = mapped_column(ForeignKey("tickets.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class ApprovalStep(Base):
+    __tablename__ = "approval_steps"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    approval_id: Mapped[int] = mapped_column(ForeignKey("approvals.id"))
+    level: Mapped[int] = mapped_column(Integer)
+    role: Mapped[str] = mapped_column(String(30))
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending, approved, rejected, skipped, cancelled
+    approver_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    remarks: Mapped[str] = mapped_column(Text, default="")
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .notifications import notify
 from .events import add_event
 from .intake import _has
 from .models import Assignment, StaffProfile, Ticket, User
@@ -133,4 +134,6 @@ def assign_ticket(db: Session, ticket: Ticket, actor: User, technician_id=None, 
     if ticket.status in ("new", "triaged"):
         change_status(ticket, "assigned")
     add_event(db, ticket.id, kind or ("reassigned" if olds else "assigned"), actor, reason)
+    notify(db, chosen["technician_id"], f"You were assigned ticket #{ticket.id}: {ticket.title[:60]}", ticket.id, "assigned")
+    notify(db, ticket.reporter_id, f"Your request #{ticket.id} was assigned to {chosen['name']}", ticket.id, "assigned")
     return chosen, ranking

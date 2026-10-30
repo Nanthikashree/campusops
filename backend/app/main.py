@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect
 
+from .routes_misc import router as misc_router
 from . import models  # noqa: F401  (loads the tables so they get created)
 from .ai import check_providers
 from .database import Base, engine
@@ -10,6 +11,7 @@ from .routes_tickets import router as tickets_router
 from .routes_assign import router as assign_router
 from .routes_bookings import router as bookings_router
 from .routes_parts import router as parts_router
+from .routes_tasks import router as tasks_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,7 +29,8 @@ app.include_router(tickets_router)
 app.include_router(assign_router)
 app.include_router(bookings_router) 
 app.include_router(parts_router)
-
+app.include_router(tasks_router)
+app.include_router(misc_router)
 @app.get("/api/health")
 def health():
     return {"status": "ok"}

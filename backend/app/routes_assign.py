@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .notifications import notify
 from .assignment import active_load, assign_ticket, change_status, rank_technicians
 from .database import get_db
 from .deps import require_roles
@@ -85,6 +86,7 @@ def complete_work(ticket_id: int, body: DoneIn, user: User = Depends(require_rol
         raise HTTPException(409, str(e))
     add_event(db, t.id, "completed", user, body.note)
     consume_reservations(db, t, user)
+    notify(db, t.reporter_id, f"Your request #{t.id} was fixed. Please confirm that it works.", t.id, "resolved")
     db.commit()
     return ticket_out(db, t)
 
