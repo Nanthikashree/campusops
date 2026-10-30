@@ -3,14 +3,14 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .notifications import notify
 from .assignment import active_load, assign_ticket, change_status, rank_technicians
 from .database import get_db
 from .deps import require_roles
 from .events import add_event
 from .models import Assignment, StaffProfile, Ticket, User
-from .routes_tickets import ticket_out
+from .notifications import notify
 from .parts import consume_reservations
+
 router = APIRouter(prefix="/api")
 MANAGERS = ("facilities_admin", "department_manager", "system_admin")
 
@@ -40,6 +40,11 @@ def check_is_my_job(db: Session, ticket_id: int, user: User):
         raise HTTPException(403, "This job is not assigned to you")
 
 
+def _ticket_out(db: Session, t: Ticket) -> dict:
+    from .routes_tickets import ticket_out  # imported here to avoid a circular import
+    return ticket_out(db, t)
+
+
 @router.get("/tickets/{ticket_id}/assignment-preview")
 def assignment_preview(ticket_id: int, user: User = Depends(require_roles(*MANAGERS)), db: Session = Depends(get_db)):
     t = get_ticket_or_404(db, ticket_id)
@@ -60,7 +65,7 @@ def assign(ticket_id: int, body: AssignIn, user: User = Depends(require_roles(*M
         db.rollback()
         raise HTTPException(409, "No technician is available for this job right now")
     db.commit()
-    return {"ticket": ticket_out(db, t), "chosen": chosen, "ranking": ranking}
+    return {"ticket": _ticket_out(db, t), "chosen": chosen, "ranking": ranking}
 
 
 @router.post("/tickets/{ticket_id}/start")
@@ -73,7 +78,7 @@ def start_work(ticket_id: int, user: User = Depends(require_roles("technician"))
         raise HTTPException(409, str(e))
     add_event(db, t.id, "started", user, "Work started")
     db.commit()
-    return ticket_out(db, t)
+    return _ticket_out(db, t)
 
 
 @router.post("/tickets/{ticket_id}/complete")
@@ -88,7 +93,7 @@ def complete_work(ticket_id: int, body: DoneIn, user: User = Depends(require_rol
     consume_reservations(db, t, user)
     notify(db, t.reporter_id, f"Your request #{t.id} was fixed. Please confirm that it works.", t.id, "resolved")
     db.commit()
-    return ticket_out(db, t)
+    return _ticket_out(db, t)
 
 
 @router.get("/staff")

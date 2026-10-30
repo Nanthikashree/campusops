@@ -9,13 +9,21 @@ import Notifications from "./pages/Notifications.jsx";
 import AdminHome from "./pages/AdminHome.jsx";
 import Approvals from "./pages/Approvals.jsx";
 import MyTasks from "./pages/MyTasks.jsx";
+import Bookings from "./pages/Bookings.jsx";
+import Rooms from "./pages/Rooms.jsx";
+import Slots from "./pages/Slots.jsx";
+import ManageSlots from "./pages/ManageSlots.jsx";
+
+const MANAGERS = ["facilities_admin", "department_manager", "system_admin"];
 
 export default function App() {
   const { user } = useAuth();
   if (!user) return <Login />;
   const admin = user.portal === "admin";
+  const manager = MANAGERS.includes(user.role);
   const tasksHome = ["technician", "procurement_approver"].includes(user.role);
   const home = !admin ? <Raise /> : tasksHome ? <Navigate to="/tasks" replace /> : <AdminHome />;
+  const slotsPage = manager ? <ManageSlots /> : user.role === "student_faculty" ? <Slots /> : <Navigate to="/" replace />;
 
   return (
     <Layout>
@@ -24,6 +32,9 @@ export default function App() {
         <Route path="/tasks" element={admin ? <MyTasks /> : <Navigate to="/" replace />} />
         <Route path="/tickets" element={<TicketList />} />
         <Route path="/tickets/:id" element={<TicketDetail />} />
+        <Route path="/slots" element={slotsPage} />
+        <Route path="/bookings" element={manager ? <Bookings /> : <Navigate to="/" replace />} />
+        <Route path="/rooms" element={manager ? <Rooms /> : <Navigate to="/" replace />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/approvals" element={admin ? <Approvals /> : <Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />

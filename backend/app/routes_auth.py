@@ -26,8 +26,11 @@ class LoginIn(BaseModel):
 
 
 def user_info(u: User) -> dict:
-    return {"id": u.id, "name": u.name, "email": u.email, "role": u.role,
-            "portal": "user" if u.role == "student_faculty" else "admin"}
+    return {
+        "id": u.id, "name": u.name, "email": u.email, "role": u.role,
+        "user_type": getattr(u, "user_type", None) or "student",
+        "portal": "user" if u.role == "student_faculty" else "admin",
+    }
 
 
 @router.post("/auth/login")

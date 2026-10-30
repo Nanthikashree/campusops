@@ -153,3 +153,13 @@ button { font-weight: 600; font-size: 14px; }
 .task:first-of-type { border-top: 0; }
 .group-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .count-pill { background: var(--accent-soft); color: var(--accent-dark); border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: 13px; }
+.impact { border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin: 12px 0; background: #fafbfc; }
+.alt { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.slot-card { display: flex; flex-direction: column; gap: 6px; margin-bottom: 0; }
+.slot-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.slot-head h3 { margin: 0; font-size: 18px; }
+.progress { height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; }
+.progress > div { height: 8px; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.tag.cyan { background: #0dcaf0; color: #052c36; }

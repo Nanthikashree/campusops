@@ -4,6 +4,7 @@ import { useAuth } from "../auth.jsx";
 import Badge from "../components/Badge.jsx";
 import Stepper from "../components/Stepper.jsx";
 import ApprovalLevels from "../components/ApprovalLevels.jsx";
+import ImpactPanel from "../components/ImpactPanel.jsx";
 import { fmt, label, STATUS_TONE, PRIORITY_TONE, SLA_TONE } from "../util.js";
 
 const MANAGERS = ["facilities_admin", "department_manager", "system_admin"];
@@ -18,10 +19,12 @@ export default function TicketDetail() {
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(5);
   const [note, setNote] = useState("");
+  const [apNote, setApNote] = useState("");
   const [parts, setParts] = useState([]);
   const [partId, setPartId] = useState("");
   const [qty, setQty] = useState(1);
   const [preview, setPreview] = useState(null);
+  const [impact, setImpact] = useState(null);
 
   const isManager = MANAGERS.includes(user.role);
 
@@ -29,11 +32,23 @@ export default function TicketDetail() {
     try {
       const data = await call(`/api/tickets/${id}`);
       setT(data);
+
       if (isManager && ["new", "triaged", "assigned"].includes(data.status)) {
         setPreview(await call(`/api/tickets/${id}/assignment-preview`));
       } else {
         setPreview(null);
       }
+
+      if (isManager && data.room) {
+        try {
+          setImpact(await call(`/api/tickets/${id}/impact`));
+        } catch {
+          setImpact(null);
+        }
+      } else {
+        setImpact(null);
+      }
+
       const mineNow = user.role === "technician" && data.assignee_id === user.id;
       if ((mineNow || isManager) && ["assigned", "in_progress", "blocked"].includes(data.status)) {
         const p = await call("/api/parts");
@@ -62,6 +77,15 @@ export default function TicketDetail() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function moveBooking(bookingId, roomId) {
+    await act(`/api/bookings/${bookingId}/move`, { room_id: roomId }, "Booking moved to the new room");
+  }
+
+  async function decide(approvalId, decision) {
+    await act(`/api/approvals/${approvalId}/decide`, { decision, note: apNote });
+    setApNote("");
   }
 
   if (error && !t) return <p className="error">{error}</p>;
@@ -97,6 +121,7 @@ export default function TicketDetail() {
       {msg && <div className="notice">{msg}</div>}
       {error && <p className="error">{error}</p>}
 
+      {/* Manager: choose a technician */}
       {isManager && preview && (
         <div className="card">
           <h3>Assign a technician</h3>
@@ -131,6 +156,7 @@ export default function TicketDetail() {
         </div>
       )}
 
+      {/* Technician: start */}
       {mine && t.status === "assigned" && (
         <div className="card">
           <h3>Your job</h3>
@@ -139,6 +165,7 @@ export default function TicketDetail() {
         </div>
       )}
 
+      {/* Technician or manager: parts */}
       {canPart && (
         <div className="card">
           <h3>Parts</h3>
@@ -161,6 +188,7 @@ export default function TicketDetail() {
         </div>
       )}
 
+      {/* Technician: finish */}
       {mine && t.status === "in_progress" && (
         <div className="card">
           <h3>Finish the job</h3>
@@ -178,6 +206,7 @@ export default function TicketDetail() {
         </div>
       )}
 
+      {/* Reporter: confirm */}
       {t.status === "resolved" && user.portal === "user" && (
         <div className="notice">
           <b>The technician says this is fixed. Is it?</b>
@@ -192,6 +221,18 @@ export default function TicketDetail() {
           <button className="danger" onClick={() => act(`/api/tickets/${id}/verify`, { fixed: false, comment }, "Reopened. The technician was told.")}>
             No, still broken
           </button>
+        </div>
+      )}
+
+      {/* Manager: impact on classes and exams */}
+      {isManager && impact && impact.room && (
+        <div className="card">
+          <h3>Impact on classes and exams</h3>
+          <p className="muted">
+            Upcoming bookings in room {impact.room}
+            {impact.room_status === "unusable" ? " (out of service)" : ""}.
+          </p>
+          <ImpactPanel affected={impact.affected} onMove={moveBooking} busy={busy} />
         </div>
       )}
 
@@ -217,10 +258,18 @@ export default function TicketDetail() {
         </div>
       </div>
 
+      {/* Approval levels, with buttons for whoever's turn it is */}
       {t.approvals.map((a) => (
         <div className="card" key={a.id}>
           <h3>Purchase approval #{a.id}: {a.quantity} x {a.part} (Rs {a.amount.toLocaleString()})</h3>
           <ApprovalLevels steps={a.steps} />
+          {a.can_decide && (
+            <div style={{ marginTop: 12 }}>
+              <input value={apNote} onChange={(e) => setApNote(e.target.value)} placeholder="Remarks (optional)" />
+              <button disabled={busy} onClick={() => decide(a.id, "approve")}>Approve</button>
+              <button className="danger" disabled={busy} onClick={() => decide(a.id, "reject")}>Reject</button>
+            </div>
+          )}
         </div>
       ))}
     </div>

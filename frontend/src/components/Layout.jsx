@@ -3,7 +3,15 @@ import { NavLink, Link } from "react-router-dom";
 import { Bell, LogOut } from "lucide-react";
 import { useAuth } from "../auth.jsx";
 import { NAV } from "../nav.js";
-import { ROLE_LABEL } from "../util.js";
+
+const ROLE_TEXT = {
+  student_faculty: "Student / Faculty",
+  technician: "Technician",
+  department_manager: "Department Manager",
+  facilities_admin: "Facilities Administrator",
+  procurement_approver: "Procurement Approver",
+  system_admin: "System Administrator",
+};
 
 function greeting() {
   const h = new Date().getHours();
@@ -25,7 +33,9 @@ export default function Layout({ children }) {
     };
   }, []);
 
-  const items = NAV[user.portal].filter((i) => !i.roles || i.roles.includes(user.role));
+  const items = NAV[user.portal].filter(
+    (i) => (!i.roles || i.roles.includes(user.role)) && (!i.types || i.types.includes(user.user_type))
+  );
   const initials = user.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   return (
@@ -60,7 +70,7 @@ export default function Layout({ children }) {
             <div className="avatar">{initials}</div>
             <div className="who">
               <div style={{ fontWeight: 600 }}>{user.name}</div>
-              <div className="small">{ROLE_LABEL[user.role]}</div>
+              <div className="small">{ROLE_TEXT[user.role] || user.role}</div>
             </div>
             <button className="ghost" onClick={logout}><LogOut size={16} /> Log out</button>
           </div>
