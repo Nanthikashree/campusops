@@ -109,3 +109,36 @@ class Booking(Base):
     status: Mapped[str] = mapped_column(String(20), default="active")  # active, cancelled
     note: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+class Part(Base):
+    __tablename__ = "parts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True)
+    stock: Mapped[int] = mapped_column(Integer, default=0)
+    reserved: Mapped[int] = mapped_column(Integer, default=0)
+    min_stock: Mapped[int] = mapped_column(Integer, default=2)
+    unit_cost: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class PartReservation(Base):
+    __tablename__ = "part_reservations"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id"))
+    part_id: Mapped[int] = mapped_column(ForeignKey("parts.id"))
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String(20), default="reserved")  # reserved, waiting, consumed, cancelled
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class Approval(Base):
+    __tablename__ = "approvals"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(20), default="purchase")
+    ticket_id: Mapped[int | None] = mapped_column(ForeignKey("tickets.id"), nullable=True)
+    part_id: Mapped[int | None] = mapped_column(ForeignKey("parts.id"), nullable=True)
+    quantity: Mapped[int] = mapped_column(Integer, default=1)
+    amount: Mapped[int] = mapped_column(Integer, default=0)
+    requested_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending, approved, rejected, cancelled
+    decided_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    note: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)

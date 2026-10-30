@@ -9,7 +9,7 @@ from .deps import require_roles
 from .events import add_event
 from .models import Assignment, StaffProfile, Ticket, User
 from .routes_tickets import ticket_out
-
+from .parts import consume_reservations
 router = APIRouter(prefix="/api")
 MANAGERS = ("facilities_admin", "department_manager", "system_admin")
 
@@ -84,6 +84,7 @@ def complete_work(ticket_id: int, body: DoneIn, user: User = Depends(require_rol
     except ValueError as e:
         raise HTTPException(409, str(e))
     add_event(db, t.id, "completed", user, body.note)
+    consume_reservations(db, t, user)
     db.commit()
     return ticket_out(db, t)
 

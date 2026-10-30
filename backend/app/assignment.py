@@ -11,7 +11,7 @@ ACTIVE_STATUSES = ("assigned", "in_progress", "blocked")
 TRANSITIONS = {
     "new": ["triaged", "assigned"],
     "triaged": ["assigned"],
-    "assigned": ["in_progress"],
+    "assigned": ["in_progress","blocked"],
     "in_progress": ["blocked", "resolved"],
     "blocked": ["in_progress"],
     "resolved": ["closed", "in_progress"],
