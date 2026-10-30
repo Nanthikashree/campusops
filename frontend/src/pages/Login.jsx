@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ShieldCheck, Sparkles, ClipboardCheck } from "lucide-react";
 import { useAuth } from "../auth.jsx";
+import { BRAND } from "../brand.js";
 
 const DEMO = [
   ["student", "Student"], ["faculty", "Faculty"], ["electrician", "Electrician"],
@@ -32,31 +33,48 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <div className="login-hero">
-        <div className="brand"><div className="logo">C</div><span>CampusOps</span></div>
-        <h1>One place to report, track and fix every campus issue.</h1>
-        <p>CampusOps links complaints, rooms, staff and spare parts, with a fixed workflow so everyone knows what is waiting for them.</p>
-        <ul>
-          <li><Sparkles size={18} /> AI reads your complaint and asks only what is missing</li>
-          <li><ClipboardCheck size={18} /> A signed job card records who did what, and when</li>
-          <li><ShieldCheck size={18} /> Role-based access enforced by the server</li>
-        </ul>
+        <div className="brand">
+          <div className="logo">{BRAND.app[0]}</div>
+          <div>
+            <div className="brand-name">{BRAND.app}</div>
+            <div className="brand-sub">{BRAND.college}</div>
+          </div>
+        </div>
+        <h1>{BRAND.headline}</h1>
+        <p>Complaints, rooms, technicians and spare parts, linked in one workflow so everyone knows what is waiting for them.</p>
+        <div className="feature-list">
+          <div className="feature">
+            <Sparkles size={24} />
+            <div><b>AI that listens</b><span>Describe a problem in plain words. We ask only for what is missing.</span></div>
+          </div>
+          <div className="feature">
+            <ClipboardCheck size={24} />
+            <div><b>A signed record of every fix</b><span>Who did what and when, with before and after photos.</span></div>
+          </div>
+          <div className="feature">
+            <ShieldCheck size={24} />
+            <div><b>Rules you can trust</b><span>Permissions, stock and approvals are enforced by the server, not left to AI.</span></div>
+          </div>
+        </div>
+        <div className="hero-foot">{BRAND.tagline}</div>
       </div>
+
       <div className="login-panel">
         <div className="box">
-          <h2>Sign in</h2>
-          <p className="muted">Use your user ID and password</p>
-          <form onSubmit={submit}>
+          <h2>Welcome back</h2>
+          <p className="muted">Sign in with your user ID</p>
+          <form onSubmit={submit} style={{ marginTop: 18 }}>
             <label>User ID</label>
             <input value={id} onChange={(e) => setId(e.target.value)} />
             <label>Password</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <button type="submit" disabled={busy} style={{ width: "100%", justifyContent: "center" }}>
+            <button type="submit" disabled={busy} style={{ width: "100%", justifyContent: "center", padding: "13px 20px", fontSize: 16 }}>
               {busy ? "Signing in..." : "Sign in"}
             </button>
             {error && <p className="error">{error}</p>}
           </form>
-          <div className="card" style={{ marginTop: 18 }}>
-            <div className="small" style={{ marginBottom: 6 }}>Demo user IDs (password: campus123)</div>
+          <div style={{ marginTop: 22, paddingTop: 18, borderTop: "1px solid var(--line)" }}>
+            <div className="small" style={{ marginBottom: 8 }}>Demo accounts (password: campus123)</div>
             <div className="chips">
               {DEMO.map(([uid, name]) => (
                 <button key={uid} className="ghost" type="button" onClick={() => setId(uid)}>{name}</button>
