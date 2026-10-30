@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-import { api } from "./api.js";
+import { api, apiBlob } from "./api.js";
 
 const Ctx = createContext(null);
 
@@ -34,8 +34,10 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const callBlob = (path) => apiBlob(path, session?.token);
+
   return (
-    <Ctx.Provider value={{ user: session?.user || null, login, logout, call }}>
+    <Ctx.Provider value={{ user: session?.user || null, login, logout, call, callBlob }}>
       {children}
     </Ctx.Provider>
   );

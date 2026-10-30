@@ -5,6 +5,8 @@ import Badge from "../components/Badge.jsx";
 import Stepper from "../components/Stepper.jsx";
 import ApprovalLevels from "../components/ApprovalLevels.jsx";
 import ImpactPanel from "../components/ImpactPanel.jsx";
+import PhotoPicker from "../components/PhotoPicker.jsx";
+import PhotoGallery from "../components/PhotoGallery.jsx";
 import { fmt, label, STATUS_TONE, PRIORITY_TONE, SLA_TONE } from "../util.js";
 
 const MANAGERS = ["facilities_admin", "department_manager", "system_admin"];
@@ -25,6 +27,10 @@ export default function TicketDetail() {
   const [qty, setQty] = useState(1);
   const [preview, setPreview] = useState(null);
   const [impact, setImpact] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  const [complaintQ, setComplaintQ] = useState([]);
+  const [beforeQ, setBeforeQ] = useState([]);
+  const [afterQ, setAfterQ] = useState([]);
 
   const isManager = MANAGERS.includes(user.role);
 
@@ -32,6 +38,12 @@ export default function TicketDetail() {
     try {
       const data = await call(`/api/tickets/${id}`);
       setT(data);
+
+      try {
+        setPhotos(await call(`/api/tickets/${id}/attachments`));
+      } catch {
+        setPhotos([]);
+      }
 
       if (isManager && ["new", "triaged", "assigned"].includes(data.status)) {
         setPreview(await call(`/api/tickets/${id}/assignment-preview`));
@@ -79,6 +91,24 @@ export default function TicketDetail() {
     }
   }
 
+  async function uploadPhotos(kind, queue, clear) {
+    setBusy(true);
+    setError("");
+    setMsg("");
+    try {
+      for (const d of queue) {
+        await call(`/api/tickets/${id}/attachments`, { method: "POST", body: { kind, data_url: d } });
+      }
+      clear([]);
+      setMsg(`${queue.length} photo(s) uploaded`);
+      await load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function moveBooking(bookingId, roomId) {
     await act(`/api/bookings/${bookingId}/move`, { room_id: roomId }, "Booking moved to the new room");
   }
@@ -93,6 +123,11 @@ export default function TicketDetail() {
 
   const mine = user.role === "technician" && t.assignee_id === user.id;
   const canPart = (mine || isManager) && ["assigned", "in_progress", "blocked"].includes(t.status);
+  const count = (k) => photos.filter((p) => p.kind === k).length;
+  const nBefore = count("before");
+  const nAfter = count("after");
+  const nComplaint = count("complaint");
+  const photosReady = nBefore > 0 && nAfter > 0;
 
   return (
     <div>
@@ -120,6 +155,26 @@ export default function TicketDetail() {
 
       {msg && <div className="notice">{msg}</div>}
       {error && <p className="error">{error}</p>}
+
+      {photos.length > 0 && (
+        <div className="card">
+          <h3>Photos</h3>
+          <PhotoGallery items={photos} />
+        </div>
+      )}
+
+      {/* Reporter: add more photos */}
+      {user.portal === "user" && t.status !== "closed" && nComplaint < 3 && (
+        <div className="card">
+          <h3>Add photos to your request</h3>
+          <PhotoPicker value={complaintQ} onChange={setComplaintQ} max={3 - nComplaint} />
+          {complaintQ.length > 0 && (
+            <button disabled={busy} onClick={() => uploadPhotos("complaint", complaintQ, setComplaintQ)}>
+              Upload {complaintQ.length} photo(s)
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Manager: choose a technician */}
       {isManager && preview && (
@@ -160,8 +215,38 @@ export default function TicketDetail() {
       {mine && t.status === "assigned" && (
         <div className="card">
           <h3>Your job</h3>
-          <p className="muted">When you reach the location and begin, press start.</p>
+          <p className="muted">Take a before photo below, then press start when you begin.</p>
           <button disabled={busy} onClick={() => act(`/api/tickets/${id}/start`, undefined, "Work started")}>Start work</button>
+        </div>
+      )}
+
+      {/* Technician: before and after photos */}
+      {mine && ["assigned", "in_progress", "blocked"].includes(t.status) && (
+        <div className="card">
+          <h3>Work photos</h3>
+          <p className="muted">A photo of the problem before you start and of the finished work are both needed to complete the job.</p>
+          <div className="row">
+            <div>
+              <label>Before the work ({nBefore} uploaded)</label>
+              <PhotoPicker value={beforeQ} onChange={setBeforeQ} max={3 - nBefore} label="Add before photo" />
+              {beforeQ.length > 0 && (
+                <button disabled={busy} onClick={() => uploadPhotos("before", beforeQ, setBeforeQ)}>
+                  Upload {beforeQ.length} before photo(s)
+                </button>
+              )}
+            </div>
+            {t.status === "in_progress" && (
+              <div>
+                <label>After the work ({nAfter} uploaded)</label>
+                <PhotoPicker value={afterQ} onChange={setAfterQ} max={3 - nAfter} label="Add after photo" />
+                {afterQ.length > 0 && (
+                  <button disabled={busy} onClick={() => uploadPhotos("after", afterQ, setAfterQ)}>
+                    Upload {afterQ.length} after photo(s)
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -192,10 +277,15 @@ export default function TicketDetail() {
       {mine && t.status === "in_progress" && (
         <div className="card">
           <h3>Finish the job</h3>
+          {!photosReady && (
+            <div className="notice">
+              Before you can complete this job, upload at least one before photo ({nBefore}) and one after photo ({nAfter}) in the Work photos card above.
+            </div>
+          )}
           <label>What did you do? (signed with your name and the time)</label>
           <textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Replaced the capacitor, tested the AC, cooling is normal" />
           <button
-            disabled={busy || note.trim().length < 3}
+            disabled={busy || note.trim().length < 3 || !photosReady}
             onClick={async () => {
               await act(`/api/tickets/${id}/complete`, { note: note.trim() }, "Marked as complete. The reporter will be asked to confirm.");
               setNote("");
@@ -209,7 +299,7 @@ export default function TicketDetail() {
       {/* Reporter: confirm */}
       {t.status === "resolved" && user.portal === "user" && (
         <div className="notice">
-          <b>The technician says this is fixed. Is it?</b>
+          <b>The technician says this is fixed. Check the before and after photos above. Is it fixed?</b>
           <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional comment" />
           <label>Rating</label>
           <select value={rating} onChange={(e) => setRating(e.target.value)}>

@@ -5,10 +5,12 @@ from sqlalchemy import inspect
 from . import models  # noqa: F401  (loads the tables so they get created)
 from .ai import check_providers
 from .database import Base, engine
+from .routes_analytics import router as analytics_router
 from .routes_assign import router as assign_router
+from .routes_attachments import router as attachments_router
 from .routes_auth import router as auth_router
 from .routes_bookings import router as bookings_router
-
+from .routes_demo import router as demo_router
 from .routes_email import router as email_router
 from .routes_misc import router as misc_router
 from .routes_parts import router as parts_router
@@ -34,9 +36,11 @@ app.include_router(bookings_router)
 app.include_router(parts_router)
 app.include_router(misc_router)
 app.include_router(email_router)
-
+app.include_router(demo_router)
 app.include_router(tasks_router)
 app.include_router(slots_router)
+app.include_router(attachments_router)
+app.include_router(analytics_router)
 
 
 @app.get("/api/health")

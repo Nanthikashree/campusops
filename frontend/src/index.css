@@ -163,3 +163,28 @@ button { font-weight: 600; font-size: 14px; }
 .progress > div { height: 8px; }
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .tag.cyan { background: #0dcaf0; color: #052c36; }
+.thumb-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+.thumb { width: 110px; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; background: #eef2f6; display: block; }
+.thumb.skeleton { cursor: default; }
+.thumb-wrap { position: relative; }
+.thumb-x { position: absolute; top: 4px; right: 4px; padding: 0 7px; margin: 0; border-radius: 50%; line-height: 20px; background: rgba(0,0,0,.65); }
+.photo-add { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px dashed #94a3b8; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; background: #fff; }
+.photo-add input { display: none; }
+.lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: grid; place-items: center; z-index: 50; cursor: zoom-out; }
+.lightbox img { max-width: 92vw; max-height: 90vh; border-radius: 8px; }
+.bar-fill.green { background: #198754; }
+.bar-fill.amber { background: #f59e0b; }
+.bar-fill.red { background: #dc3545; }
+.legend { display: flex; gap: 16px; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.room-card { background: #fff; border: 2px solid var(--line); border-radius: 8px; padding: 10px; min-height: 150px; }
+.room-card.down { border-color: #fecaca; background: #fff7f7; }
+.room-card.ok { border-color: #198754; border-style: dashed; background: #f3fbf6; }
+.room-card.ok.hover { background: #dcfce7; }
+.room-card.bad { opacity: .55; border-color: #fca5a5; border-style: dashed; }
+.room-card.here { border-color: var(--accent); }
+.room-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.chip { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 6px 8px; margin: 6px 0; background: #fff; cursor: grab; font-size: 13px; }
+.chip.exam { border-left-color: #dc3545; }
+.chip.picked { outline: 2px solid var(--accent); }

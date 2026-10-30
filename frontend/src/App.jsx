@@ -11,10 +11,14 @@ import Approvals from "./pages/Approvals.jsx";
 import MyTasks from "./pages/MyTasks.jsx";
 import Bookings from "./pages/Bookings.jsx";
 import Rooms from "./pages/Rooms.jsx";
+import RoomBoard from "./pages/RoomBoard.jsx";
 import Slots from "./pages/Slots.jsx";
 import ManageSlots from "./pages/ManageSlots.jsx";
+import Demo from "./pages/Demo.jsx";
+import Analytics from "./pages/Analytics.jsx";
 
 const MANAGERS = ["facilities_admin", "department_manager", "system_admin"];
+const DEMO_ROLES = ["facilities_admin", "system_admin"];
 
 export default function App() {
   const { user } = useAuth();
@@ -33,8 +37,11 @@ export default function App() {
         <Route path="/tickets" element={<TicketList />} />
         <Route path="/tickets/:id" element={<TicketDetail />} />
         <Route path="/slots" element={slotsPage} />
+        <Route path="/board" element={manager ? <RoomBoard /> : <Navigate to="/" replace />} />
         <Route path="/bookings" element={manager ? <Bookings /> : <Navigate to="/" replace />} />
         <Route path="/rooms" element={manager ? <Rooms /> : <Navigate to="/" replace />} />
+        <Route path="/analytics" element={manager ? <Analytics /> : <Navigate to="/" replace />} />
+        <Route path="/demo" element={DEMO_ROLES.includes(user.role) ? <Demo /> : <Navigate to="/" replace />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/approvals" element={admin ? <Approvals /> : <Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />

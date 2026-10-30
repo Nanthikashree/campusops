@@ -10,6 +10,7 @@ from .events import add_event
 from .models import Assignment, StaffProfile, Ticket, User
 from .notifications import notify
 from .parts import consume_reservations
+from .attachments import count_kind
 
 router = APIRouter(prefix="/api")
 MANAGERS = ("facilities_admin", "department_manager", "system_admin")
@@ -85,6 +86,8 @@ def start_work(ticket_id: int, user: User = Depends(require_roles("technician"))
 def complete_work(ticket_id: int, body: DoneIn, user: User = Depends(require_roles("technician")), db: Session = Depends(get_db)):
     t = get_ticket_or_404(db, ticket_id)
     check_is_my_job(db, t.id, user)
+    if count_kind(db, t.id, "before") < 1 or count_kind(db, t.id, "after") < 1:
+        raise HTTPException(409, "Attach at least one before-work photo and one after-work photo before marking the job complete")
     try:
         change_status(t, "resolved")
     except ValueError as e:

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
+import PhotoPicker from "../components/PhotoPicker.jsx";
 import { label } from "../util.js";
 
 const TYPES = ["maintenance", "it_network", "room_booking", "equipment", "inventory", "other"];
@@ -10,6 +11,7 @@ export default function Raise() {
   const { call } = useAuth();
   const [text, setText] = useState("");
   const [extra, setExtra] = useState("");
+  const [photos, setPhotos] = useState([]);
   const [result, setResult] = useState(null);
   const [created, setCreated] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -56,7 +58,15 @@ export default function Raise() {
           channel: "form",
         },
       });
-      setCreated(t);
+      let failed = 0;
+      for (const p of photos) {
+        try {
+          await call(`/api/tickets/${t.id}/attachments`, { method: "POST", body: { kind: "complaint", data_url: p } });
+        } catch {
+          failed += 1;
+        }
+      }
+      setCreated({ ...t, photoFailed: failed, photoCount: photos.length });
     } catch (e) {
       setError(e.message);
     } finally {
@@ -67,6 +77,7 @@ export default function Raise() {
   function reset() {
     setText("");
     setExtra("");
+    setPhotos([]);
     setResult(null);
     setCreated(null);
   }
@@ -76,6 +87,10 @@ export default function Raise() {
       <div className="card">
         <h2 className="ok">Request sent</h2>
         <p>Your request <b>#{created.id}</b> was logged and the facilities team was notified.</p>
+        {created.photoCount > 0 && created.photoFailed === 0 && <p className="small">{created.photoCount} photo(s) attached.</p>}
+        {created.photoFailed > 0 && (
+          <div className="notice">{created.photoFailed} photo(s) could not be uploaded. You can add them again from the request page.</div>
+        )}
         {created.similar_ticket_ids?.length > 0 && (
           <div className="notice">
             Others have reported something similar (#{created.similar_ticket_ids.join(", #")}). We will handle them together.
@@ -89,8 +104,10 @@ export default function Raise() {
 
   return (
     <div>
-      <h2>Raise a request</h2>
-      <p className="muted">Describe the problem in your own words. We will work out the details.</p>
+      <div className="page-head">
+        <h2>Raise a request</h2>
+        <div className="muted">Describe the problem in your own words and add photos if you can. We will work out the details.</div>
+      </div>
 
       <form className="card" onSubmit={start}>
         <textarea
@@ -100,9 +117,13 @@ export default function Raise() {
           onChange={(e) => setText(e.target.value)}
           placeholder="e.g. The AC in B block room 203 is not working since this morning"
         />
-        <button type="submit" disabled={busy || text.trim().length < 3}>
-          {busy ? "Reading..." : result ? "Re-read my description" : "Continue"}
-        </button>
+        <label>Photos (optional, up to 3)</label>
+        <PhotoPicker value={photos} onChange={setPhotos} max={3} label="Add photos" />
+        <div style={{ marginTop: 12 }}>
+          <button type="submit" disabled={busy || text.trim().length < 3}>
+            {busy ? "Reading..." : result ? "Re-read my description" : "Continue"}
+          </button>
+        </div>
       </form>
 
       {error && <p className="error">{error}</p>}
@@ -112,13 +133,13 @@ export default function Raise() {
           <h3>What we understood</h3>
           <div className="row">
             <div>
-              <label className="small">Issue type</label>
+              <label>Issue type</label>
               <select value={result.issue_type} onChange={(e) => setResult({ ...result, issue_type: e.target.value })}>
                 {TYPES.map((t) => <option key={t} value={t}>{label(t)}</option>)}
               </select>
             </div>
             <div>
-              <label className="small">Urgency</label>
+              <label>Urgency</label>
               <select value={result.urgency} onChange={(e) => setResult({ ...result, urgency: e.target.value })}>
                 {URGENCY.map((u) => <option key={u} value={u}>{u}</option>)}
               </select>
@@ -128,6 +149,8 @@ export default function Raise() {
             <b>Location:</b> {result.room ? `${result.room.building} - ${result.room.name}` : "not found"}
             {"  "}
             <b>Item:</b> {result.asset || "not specified"}
+            {"  "}
+            <b>Photos:</b> {photos.length}
           </p>
           <div className="small">Read by: {result.extracted_by}</div>
 
@@ -140,7 +163,7 @@ export default function Raise() {
           )}
 
           <button onClick={submit} disabled={busy}>
-            {result.question ? "Submit anyway" : "Submit request"}
+            {busy ? "Sending..." : result.question ? "Submit anyway" : "Submit request"}
           </button>
         </div>
       )}

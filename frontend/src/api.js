@@ -28,3 +28,9 @@ export async function api(path, { method = "GET", body, token } = {}) {
   }
   return data;
 }
+
+export async function apiBlob(path, token) {
+  const res = await fetch(BASE + path, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (!res.ok) throw new Error(`Could not load the image (${res.status})`);
+  return await res.blob();
+}

@@ -213,3 +213,14 @@ class SlotBooking(Base):
     status: Mapped[str] = mapped_column(String(20), default="booked")  # booked, cancelled
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+class Attachment(Base):
+    __tablename__ = "attachments"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id"))
+    kind: Mapped[str] = mapped_column(String(20))  # complaint, before, after
+    filename: Mapped[str] = mapped_column(String(100))
+    content_type: Mapped[str] = mapped_column(String(30))
+    size: Mapped[int] = mapped_column(Integer, default=0)
+    caption: Mapped[str] = mapped_column(String(200), default="")
+    uploaded_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
